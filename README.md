@@ -1,93 +1,98 @@
-# Casting Defect Detection with CNN  
-*A junior data science project on computer vision & quality control*
+# Casting Defect Detection (TensorFlow)
+
+*A small CNN project to classify aluminium casting images as OK or defective.*
 
 ## 👋 About this project
 
-I built this project as a **junior data science / ML profile** to show that I can:
+This project is part of my learning path as a **junior data scientist**.  
+I wanted to build something close to a **real industrial use case**: automatic visual inspection in manufacturing.
 
-- Work with a **real industrial dataset**
-- Build and train a **Convolutional Neural Network (CNN)** with TensorFlow/Keras
-- Evaluate a model properly (not only accuracy)
-- Explain results and limits in a clear, structured way
+The goal:
 
-The goal is simple:
+> Given a grayscale image of an aluminium casting (front view), classify it as  
+> **`def_front`** (defective) or **`ok_front`** (non-defective).
 
-> Given a grayscale image of a cast part, classify it as  
-> **`def_front` (defective)** or **`ok_front` (non-defective)**.
-
-This type of problem is very common in **manufacturing quality control**: automatically detect defects and reduce manual inspection time.
+The notebook is written to be easy to follow and reusable as a student / junior GitHub project.   
 
 ---
 
-## 🎯 What this project demonstrates
+## 🔍 What this project demonstrates
 
-From a junior data scientist point of view, this repo shows that I can:
+From a junior DS point of view, this repo shows that I can:
 
-- Set up a **train / validation / test split** and keep it consistent
-- Build a CNN from scratch in Keras (no pre-trained model)
-- Use **Rescaling** layers and keep preprocessing consistent between training and inference
-- Track and interpret:
-  - Training & validation **loss / accuracy curves**
-  - **Confusion matrix** & **classification report**
-  - **ROC** and **Precision–Recall** curves
-- Inspect **misclassified images** to understand model weaknesses
-- Implement a small utility to **predict a single image**
-- Save and reload a trained model
+- Organise a project with a clear **step-by-step pipeline**
+- Use **TensorFlow / Keras** to build and train a **Convolutional Neural Network (CNN)**
+- Keep preprocessing consistent between training and inference (grayscale, resize, rescaling)
+- Split data into **train / validation / test** sets
+- Monitor **training curves** (loss & accuracy)
+- Evaluate using:
+  - Test accuracy & loss
+  - **Confusion matrix**
+  - **Classification report** (precision, recall, F1-score)
+- Write a helper to **predict a single image** and visualise the result
+- Save the trained model so it can be reloaded without retraining
+
+The notebook structure reflects this:
+
+1. Imports and settings  
+2. Data folders  
+3. Quick look at the data (sample images)  
+4. TensorFlow datasets (`image_dataset_from_directory`)  
+5. Build a small CNN  
+6. Train the model  
+7. Evaluate on validation and test data  
+8. Predict a single image  
+9. Save the trained model   
 
 ---
 
 ## 🧠 Model & approach (high level)
 
-1. **Data loading**
-   - Grayscale images of cast parts (front view)
-   - Split into **train**, **validation**, and **test** sets
+**Data & preprocessing**
 
-2. **Preprocessing**
-   - Resize images to a fixed size (e.g. `128x128`)
-   - Use a Keras `Rescaling(1./255)` layer to normalise pixels to \[0, 1\]
+- Input: grayscale images of cast parts (two folders: `def_front` and `ok_front`)  
+- Images are resized to **128×128** and kept in one channel.  
+- A Keras `Rescaling(1./255)` layer normalises pixel values to \[0, 1].   
 
-3. **CNN architecture (TensorFlow / Keras)**
-   - Several blocks of:
-     - `Conv2D` + `ReLU` activation
-     - `MaxPooling2D`
-   - `Flatten` layer
-   - `Dense` layers with `Dropout` for regularisation
-   - Final `Dense(1, activation="sigmoid")` for binary classification
+**Model**
 
-4. **Training**
-   - Loss: `BinaryCrossentropy`
-   - Optimiser: `Adam`
-   - Metrics: `Accuracy`
-   - Early stopping / checkpoints can be added (depending on version)
+The CNN is intentionally small so it can train quickly on a laptop:
 
-5. **Evaluation & analysis**
-   - Accuracy & loss on **validation** and **test** sets
-   - **Confusion matrix** & **classification report** for both classes
-   - **ROC curve** & **Precision–Recall curve**
-   - Visualisation of some **misclassified images**
-   - A simple **decision threshold exploration** to see the trade-off between false positives and false negatives
+- Optional `RandomFlip` + `RandomRotation` data augmentation
+- Several blocks of:
+  - `Conv2D` with ReLU activation
+  - `MaxPooling2D`
+- `Flatten`
+- `Dense` layer(s) with `Dropout` for regularisation
+- Final `Dense(1, activation="sigmoid")` for binary classification   
 
-6. **Single-image prediction**
-   - A helper function `predict_image(path, model, class_names)` that:
-     - Loads one image
-     - Applies the same preprocessing as training
-     - Displays it with the predicted label and probability
+**Training**
 
-7. **Model saving**
-   - Save the trained model as a Keras file (e.g. `models/defect_detection_cnn.keras`)  
-   - Can be loaded later for inference without retraining
+- Loss: `BinaryCrossentropy`
+- Optimiser: `Adam`
+- Metric: `Accuracy`
+- Early stopping on validation loss to avoid overfitting
+
+**Single-image prediction**
+
+A function `predict_image(path, model, class_names)`:
+
+- Loads a single image, converts to grayscale and resizes to `IMG_SIZE`
+- Applies the same preprocessing as the training pipeline
+- Runs `model.predict` and displays the image with predicted class and defect probability   
+
+**Saving the model**
+
+- The trained model is saved to a `models/` folder so it can be reused later without retraining.
 
 ---
 
-## 📊 Current results (summary)
+## 📊 Results (current version)
 
-> Exact numbers may change slightly when retraining, but this is the typical performance.
+On the final trained model:
 
-- **Validation accuracy**: ~0.86  
-- **Test accuracy**: ~0.85  
-- The model successfully captures a large part of the signal needed to distinguish `def_front` vs `ok_front`.
-- Confusion matrix and ROC/PR curves show that:
-  - Defective parts are usually detected correctly
-  - There are some false positives / false negatives, which I analyse in the notebook
+- **Validation accuracy:** ~**0.95**  
+- **Test accuracy:** ~**0.96**   
+- The confusion matrix and classification report show **balanced performance** on both classes (`def_front` and `ok_front`), with precision and recall both around **0.93–0.96**.   
 
-The notebook also includes a short discussion about what these errors mean in a **real factory context** (cost of missing a defect vs cost of false alarms).
+In plain words: the model is able to correctly distinguish defective vs OK parts most of the time, which would already be useful as a first quality-control assistant.
